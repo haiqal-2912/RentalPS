@@ -1,0 +1,19 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.wrapper {
+    min-height: 100vh; /* Set minimum tinggi wrapper */
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1; /* Membuat konten mengisi ruang yang tersedia */
+}
+
+.footer {
+    background-color: #f8f9fa; /* Warna latar belakang footer */
+    padding: 10px; /* Padding untuk footer */
+}
