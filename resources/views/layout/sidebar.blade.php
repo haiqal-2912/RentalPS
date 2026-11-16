@@ -22,8 +22,12 @@
             <a href="{{ route('beranda') }}" class="nav-item nav-link {{ request()->route()->getName() == 'beranda' ? 'active' : '' }}"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
             <a href="{{ route('playstation') }}" class="nav-item nav-link {{ request()->route()->getName() == 'playstation' ? 'active' : '' }}"><i class="fa fa-gamepad me-2"></i>Playstation</a>
             <a href="{{ route('transaksi') }}" class="nav-item nav-link {{ request()->route()->getName() == 'transaksi' ? 'active' : '' }}"><i class="fa fa-shopping-cart me-2"></i>Transaksi</a>
-            <a href="{{ route('laporan') }}" class="nav-item nav-link {{ request()->route()->getName() == 'laporan' ? 'active' : '' }}"><i class="fa fa-file-invoice-dollar me-2"></i>Laporan Transaksi</a>
-            <a href="{{ route('users') }}" class="nav-item nav-link {{ request()->route()->getName() == 'users' ? 'active' : '' }}"><i class="fa fa-users me-2"></i>User</a>
+            @if (auth()->user()->role === 'kasir')
+                <a href="{{ route('laporan') }}" class="nav-item nav-link {{ request()->route()->getName() == 'laporan' ? 'active' : '' }}"><i class="fa fa-file-invoice-dollar me-2"></i>Laporan Transaksi</a>
+                <a href="{{ route('users') }}" class="nav-item nav-link {{ request()->route()->getName() == 'users' ? 'active' : '' }}"><i class="fa fa-users me-2"></i>User</a>
+            @endif
+            <a href="{{ route('menu') }}" class="nav-item nav-link {{ request()->route()->getName() == 'menu' ? 'active' : '' }}"><i class="fa fa-utensils me-2"></i>Menu</a>
+            <a href="{{ route('pesanan') }}" class="nav-item nav-link {{ request()->route()->getName() == 'pesanan' ? 'active' : '' }}"><i class="fa fa-receipt me-2"></i>{{ auth()->user()->role === 'kasir' ? 'Pesanan Menu' : 'Pesanan Saya' }}</a>
         </div>
     </nav>
 </div>

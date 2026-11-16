@@ -23,9 +23,11 @@
                             <th scope="col">Lama Pesan</th>
                             <th scope="col">Total Harga</th>
                             <th scope="col">Status</th>
-                            <th>
-                                Proses
-                            </th>
+                            @if (auth()->user()->role === 'kasir')
+                                <th>
+                                    Proses
+                                </th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -43,6 +45,7 @@
                                 <td>{{ $data->Durasi_sewa }}</td>
                                 <td>@rupiah($data->Total_harga)</td>
                                 <td>{{ $data->status }}</td>
+                                @if (auth()->user()->role === 'kasir')
                                 <td>
                                     @if ($data->status == 'proses')
                                         <button class="btn btn-sm btn-success"
@@ -52,11 +55,15 @@
                                         <button class="btn btn-sm btn-success"
                                             wire:click="selesai({{ $data->id }})">Kembali</button>
                                     @endif
+                                    <button class="btn btn-sm btn-danger"
+                                        wire:click="destroy({{ $data->id }})"
+                                        wire:confirm="Hapus transaksi ini?">Delete</button>
                                 </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5">Data Playstation Belum Ada</td>
+                                <td colspan="11">Data Transaksi Belum Ada</td>
                             </tr>
                         @endforelse
                     </tbody>

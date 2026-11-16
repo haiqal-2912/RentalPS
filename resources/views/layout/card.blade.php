@@ -9,6 +9,7 @@
                 </div>
             </div>
         </div>
+        @if (auth()->user()->role === 'kasir')
         <div class="col-sm-6 col-xl-4">
             <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
                 <i class="fa fa-dollar-sign fa-3x text-primary"></i>
@@ -27,6 +28,7 @@
                 </div>
             </div>
         </div>
+        @endif
         <div class="row">
             <div class="col-12">
                 <div class="card">

@@ -4,41 +4,50 @@ namespace App\Livewire;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Livewire\Concerns\ChecksRole;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
 
 class UsersComponent extends Component
 {
-    use WithPagination, WithoutUrlPagination;
+    use WithPagination, WithoutUrlPagination, ChecksRole;
     protected $paginationTheme = 'bootstrap';
     public $addPage, $editPage = false;
     public $name, $email, $password, $role, $id, $alamat, $no_telp, $status;
+    public function mount()
+    {
+        $this->hanyaKasir();
+    }
     public function render()
     {
+        $this->hanyaKasir();
         $data['user'] = User::paginate(10);
         return view('livewire.users-component', $data);
     }
     public function create()
     {
+        $this->hanyaKasir();
         $this->reset();
         $this->addPage = true;
     }
     public function store()
     {
+        $this->hanyaKasir();
         $this->validate(
             [
                 'name' => 'required',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:users,email',
                 'alamat' => 'required',
                 'no_telp' => 'required',
                 'password' => 'required',
-                'role' => 'required',
+                'role' => 'required|in:kasir,pelanggan',
             ],
             [
                 'name.required' => 'Nama Tidak Boleh Kosong!',
                 'email.required' => 'Email Tidak Boleh Kosong!',
                 'email.email' => 'Format email salah!',
+                'email.unique' => 'Email sudah terdaftar!',
                 'password.required' => 'Password Tidak Boleh Kosong!',
                 'role.required' => 'Role Tidak Boleh Kosong!',
             ],
@@ -57,15 +66,21 @@ class UsersComponent extends Component
     }
     public function destroy($id)
     {
-        $cari = User::find($id);
+        $this->hanyaKasir();
+        if ((int) $id === auth()->id()) {
+            session()->flash('error', 'Anda tidak bisa menghapus akun sendiri!');
+            return;
+        }
+        $cari = User::findOrFail($id);
         $cari->delete();
         session()->flash('success', 'Berhasil hapus Data!');
         $this->reset();
     }
     public function edit($id)
     {
+        $this->hanyaKasir();
         $this->reset();
-        $cari = User::find($id);
+        $cari = User::findOrFail($id);
         $this->name = $cari->name;
         $this->email = $cari->email;
         $this->alamat = $cari->alamat;
@@ -77,7 +92,19 @@ class UsersComponent extends Component
     }
     public function update()
     {
-        $cari = User::find($this->id);
+        $this->hanyaKasir();
+        $this->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $this->id,
+            'role' => 'required|in:kasir,pelanggan',
+        ], [
+            'name.required' => 'Nama Tidak Boleh Kosong!',
+            'email.required' => 'Email Tidak Boleh Kosong!',
+            'email.email' => 'Format email salah!',
+            'email.unique' => 'Email sudah terdaftar!',
+            'role.required' => 'Role Tidak Boleh Kosong!',
+        ]);
+        $cari = User::findOrFail($this->id);
         if ($this->password == '') {
             $cari->update([
                 'name' => $this->name,

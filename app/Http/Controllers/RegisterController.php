@@ -31,13 +31,14 @@ class RegisterController extends Controller
     {
         $request->validate([
             'name'=>'required',
-            'email'=>'required|email',
+            'email'=>'required|email|unique:users,email',
             'password'=>'required'
         ],
         [
           'name.required' => 'Nama Tidak Boleh Kosong!',
           'email.required' => 'Email Tidak Boleh Kosong!',
           'email.email' => 'Format email salah!',
+          'email.unique' => 'Email sudah terdaftar!',
           'password.required' => 'Password Tidak Boleh Kosong!'  
         ]);
 
@@ -45,7 +46,8 @@ class RegisterController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'owner'
+            'role' => 'pelanggan',
+            'status' => 1
         ]);
         session()->flash('success', 'Berhasil didaftarkan!');
         return  redirect()->route('register');
@@ -82,4 +84,8 @@ class RegisterController extends Controller
     {
         //
     }
+
+    
 }
+
+

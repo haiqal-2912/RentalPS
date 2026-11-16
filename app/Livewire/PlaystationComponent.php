@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ChecksRole;
 use App\Models\Playstation;
+use App\Models\Transaksi;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithoutUrlPagination;
@@ -10,21 +12,29 @@ use Livewire\WithPagination;
 
 class PlaystationComponent extends Component
 {
-    use WithPagination, WithoutUrlPagination, WithFileUploads;
+    use WithPagination, WithoutUrlPagination, WithFileUploads, ChecksRole;
     protected $paginationTheme = 'bootstrap';
     public $addPage, $editPage = false;
     public $Type, $no_seri, $foto, $harga_sewa, $id;
     public function render()
     {
-        $data['playstation'] = Playstation::paginate(10);
+        if ($this->isKasir()) {
+            $data['playstation'] = Playstation::paginate(10);
+        } else {
+            // Pelanggan hanya melihat unit yang tidak sedang dibooking / dipinjam
+            $dipakai = Transaksi::where('status', '!=', 'kembali')->pluck('playstation_id');
+            $data['playstation'] = Playstation::whereNotIn('id', $dipakai)->paginate(10);
+        }
         return view('livewire.playstation-component', $data);
     }
     public function create()
     {
+        $this->hanyaKasir();
         $this->addPage = true;
     }
     public function store()
     {
+        $this->hanyaKasir();
         // $this->reset();
         $this->validate([
             'Type' => 'required',
@@ -53,6 +63,7 @@ class PlaystationComponent extends Component
     }
     public function edit($id)
     {
+        $this->hanyaKasir();
         $this->reset();
         $this->editPage = true;
         $this->id = $id;
@@ -63,6 +74,7 @@ class PlaystationComponent extends Component
     }
     public function update()
     {
+        $this->hanyaKasir();
         $playstation = Playstation::find($this->id);
         if (empty($this->foto)) {
             $playstation->update([
@@ -87,6 +99,7 @@ class PlaystationComponent extends Component
     }
     public function destroy($id)
     {
+        $this->hanyaKasir();
         $playstation = Playstation::find($id);
         unlink(public_path('storage/playstation/' . $playstation->foto));
         $playstation->delete();

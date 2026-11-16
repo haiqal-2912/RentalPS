@@ -2,7 +2,7 @@
     <div class="row g-4">
         <div class="col-sm-12 col-xl-12">
             <div class="bg-light rounded h-100 p-4">
-                <h6 class="mb-4">Playstation</h6>
+                <h6 class="mb-4">{{ auth()->user()->role === 'kasir' ? 'Playstation' : 'Unit Playstation Tersedia' }}</h6>
                 @if (session()->has('success'))
                     <div class="alert alert-success" role="alert">
                         {{ session('success') }}
@@ -16,9 +16,11 @@
                             <th scope="col">Serial Number</th>
                             <th scope="col">Harga Sewa</th>
                             <th scope="col">Foto</th>
-                            <th>
-                                Proses
-                            </th>
+                            @if (auth()->user()->role === 'kasir')
+                                <th>
+                                    Proses
+                                </th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -31,11 +33,13 @@
                             <td>
                                 <img src="{{ asset('storage/playstation/' .$data->foto) }}" style="width:200px" alt="{{ $data->Type }}">
                             </td>
-                            <td>
-                                <button class="btn btn-info" wire:click="edit({{ $data->id }})">Edit</button>
-                                <button class="btn btn-danger"
-                                    wire:click="destroy({{ $data->id }})">Delete</button>
-                            </td>
+                            @if (auth()->user()->role === 'kasir')
+                                <td>
+                                    <button class="btn btn-info" wire:click="edit({{ $data->id }})">Edit</button>
+                                    <button class="btn btn-danger"
+                                        wire:click="destroy({{ $data->id }})">Delete</button>
+                                </td>
+                            @endif
                         </tr>
                         @empty
                         <tr>
@@ -45,14 +49,18 @@
                     </tbody>
                 </table>
                 {{ $playstation->links() }}
-                <button wire:click="create" class="btn btn-primary">Tambah</button>
+                @if (auth()->user()->role === 'kasir')
+                    <button wire:click="create" class="btn btn-primary">Tambah</button>
+                @endif
             </div>
         </div>
     </div>
-    @if ($addPage)
-        @include('playstation.create')
-    @endif
-    @if ($editPage)
-        @include('playstation.edit')
+    @if (auth()->user()->role === 'kasir')
+        @if ($addPage)
+            @include('playstation.create')
+        @endif
+        @if ($editPage)
+            @include('playstation.edit')
+        @endif
     @endif
 </div>

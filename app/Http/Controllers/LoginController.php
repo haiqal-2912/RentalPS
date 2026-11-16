@@ -24,7 +24,7 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended('beranda');
+            return redirect()->intended(route('beranda'));
         }
         return back()->withErrors([
             'email' => 'Autentikasi Gagal!',

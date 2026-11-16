@@ -27,7 +27,7 @@ Route::get('login/keluar', [LoginController::class, 'keluar'])->name('login.kelu
 
 Route::get('users', function(){
     return view('users.index');
-})->name('users')->middleware('auth');
+})->name('users')->middleware(['auth', 'role:kasir']);
 Route::get('playstation', function(){
     return view('playstation.index');
 })->name('playstation')->middleware('auth');
@@ -36,4 +36,14 @@ Route::get('transaksi', function(){
 })->name('transaksi')->middleware('auth');
 Route::get('laporan', function(){
     return view('laporan.index');
-})->name('laporan')->middleware('auth');
+})->name('laporan')->middleware(['auth', 'role:kasir']);
+
+// Menu makanan & minuman: kasir mengelola (CRUD), pelanggan melihat menu tersedia lalu memesan
+Route::get('menu', function(){
+    return view('menu.index');
+})->name('menu')->middleware(['auth', 'role:kasir,pelanggan']);
+
+// Pesanan menu: kasir melihat semua & mengubah status, pelanggan hanya melihat pesanannya sendiri
+Route::get('pesanan', function(){
+    return view('pesanan.index');
+})->name('pesanan')->middleware(['auth', 'role:kasir,pelanggan']);

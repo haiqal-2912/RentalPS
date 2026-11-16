@@ -54,8 +54,8 @@
                         <label for="role" class="form-label">Role</label>
                         <select id="role" value="{{ old('role') }}" class="form-select" wire:model="role">
                             <option value="">--Pilih--</option>
-                            <option value="owner">Owner</option>
                             <option value="kasir">Kasir</option>
+                            <option value="pelanggan">Pelanggan</option>
                         </select>
                         @error('role')
                             <div class="form text text-danger"> {{ $message }}</div>

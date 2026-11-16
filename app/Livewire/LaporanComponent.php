@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\ChecksRole;
 use App\Models\Transaksi;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
@@ -11,12 +12,13 @@ use Livewire\Attributes\On;
 
 class LaporanComponent extends Component
 {
-    use WithPagination, WithoutUrlPagination;
+    use WithPagination, WithoutUrlPagination, ChecksRole;
     public $tanggal1, $tanggal2;
 
     #[On('lihat-laporan')]
     public function render()
     {
+        $this->hanyaKasir();
         if ($this->tanggal2 != "") {
             $data['transaksi'] = Transaksi::where('status', 'kembali')
                 ->whereBetween('tanggal_Pemesanan', [$this->tanggal1, $this->tanggal2])
@@ -32,6 +34,7 @@ class LaporanComponent extends Component
     }
     public function exportpdf()
     {
+        $this->hanyaKasir();
         if ($this->tanggal2 != "") {
             $data['transaksi'] = Transaksi::where('status', 'kembali')
                 ->whereBetween('tanggal_Pemesanan', [$this->tanggal1, $this->tanggal2])
