@@ -12,33 +12,37 @@
                         {{ session('error') }}
                     </div>
                 @endif
-                <h6 class="mb-4">Data Playstation</h6>
+
+                {{-- Booking berhasil: kirim pesan terformat ke WhatsApp kasir (F-02) & lihat nota --}}
+                @if ($booking)
+                    <div class="alert alert-info" role="alert">
+                        <b>Booking {{ $booking->nomor() }}</b> tersimpan.
+                        @if (auth()->user()->role === 'pelanggan')
+                            Kirim detail ke kasir agar cepat dikonfirmasi.
+                        @endif
+                        <div class="mt-2">
+                            @if (auth()->user()->role === 'pelanggan' && $booking->waKasirUrl())
+                                <a class="btn btn-sm btn-success" target="_blank" rel="noopener"
+                                    href="{{ $booking->waKasirUrl() }}"><i class="fab fa-whatsapp me-1"></i>Kirim ke WhatsApp Kasir</a>
+                            @endif
+                            <a class="btn btn-sm btn-outline-secondary" target="_blank"
+                                href="{{ route('transaksi.nota', $booking->id) }}">Lihat Nota</a>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="mb-0">Data Playstation</h6>
+                    <a href="{{ route('jadwal') }}" class="btn btn-sm btn-outline-primary">Lihat Jadwal Unit</a>
+                </div>
                 <div class="row">
                     @foreach ($playstation as $data)
-                        @php
-                            $dibooking = \App\Models\Transaksi::where('playstation_id', $data->id)
-                                ->where('status', '!=', 'kembali')
-                                ->exists();
-                        @endphp
-                        <div class="col-md-4 d-flex align-items-stretch mb-4">
+                        @php $terisi = in_array($data->id, $terisiHariIni); @endphp
+                        <div class="col-md-4 d-flex align-items-stretch mb-4" wire:key="ps-{{ $data->id }}">
                             <div class="card w-100" style="position: relative;">
-                                @if ($dibooking)
-                                    <!-- Overlay tanda SUDAH DIBOOKING -->
-                                    <div
-                                        style="
-                                        position: absolute; 
-                                        top: 0; left: 0; 
-                                        width: 100%; height: 100%; 
-                                        background: rgba(255, 0, 0, 0.7); 
-                                        color: white; 
-                                        display: flex; 
-                                        justify-content: center; 
-                                        align-items: center; 
-                                        font-size: 1.5rem; 
-                                        font-weight: bold;
-                                        z-index: 1;">
-                                        SUDAH DIBOOKING
-                                    </div>
+                                @if ($terisi)
+                                    <span class="badge bg-danger"
+                                        style="position: absolute; top: 10px; right: 10px; z-index: 1;">Terisi hari ini</span>
                                 @endif
                                 <!-- Gambar dengan tinggi tetap -->
                                 <img src="{{ asset('storage/playstation/' . $data->foto) }}" class="card-img-top"
@@ -50,12 +54,8 @@
                                         <li class="list-group-item">Harga Sewa/Hari: @rupiah($data->harga_sewa)</li>
                                     </ul>
                                     <div class="mt-auto text-center">
-                                        @if (!$dibooking)
-                                            <button wire:click="create({{ $data->id }},{{ $data->harga_sewa }})"
-                                                class="btn btn-outline-success w-100">Pesan Playstation</button>
-                                        @else
-                                            <button class="btn btn-danger w-100" disabled>Sudah Dibooking</button>
-                                        @endif
+                                        <button wire:click="create({{ $data->id }},{{ $data->harga_sewa }})"
+                                            class="btn btn-outline-success w-100">Pesan Playstation</button>
                                     </div>
                                 </div>
                             </div>

@@ -47,3 +47,13 @@ Route::get('menu', function(){
 Route::get('pesanan', function(){
     return view('pesanan.index');
 })->name('pesanan')->middleware(['auth', 'role:kasir,pelanggan']);
+
+// Live Slot Board & Katalog: bisa dibuka tanpa login (tidak menampilkan data pribadi)
+Route::get('jadwal', function(){
+    return view('jadwal.index');
+})->name('jadwal');
+Route::get('katalog', [\App\Http\Controllers\KatalogController::class, 'index'])->name('katalog');
+
+// Nota digital: kasir semua transaksi, pelanggan hanya miliknya
+Route::get('transaksi/{transaksi}/nota', [\App\Http\Controllers\NotaController::class, 'show'])
+    ->name('transaksi.nota')->middleware('auth');

@@ -21,7 +21,9 @@
         <div class="navbar-nav w-100">
             <a href="{{ route('beranda') }}" class="nav-item nav-link {{ request()->route()->getName() == 'beranda' ? 'active' : '' }}"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
             <a href="{{ route('playstation') }}" class="nav-item nav-link {{ request()->route()->getName() == 'playstation' ? 'active' : '' }}"><i class="fa fa-gamepad me-2"></i>Playstation</a>
-            <a href="{{ route('transaksi') }}" class="nav-item nav-link {{ request()->route()->getName() == 'transaksi' ? 'active' : '' }}"><i class="fa fa-shopping-cart me-2"></i>Transaksi</a>
+            <a href="{{ route('transaksi') }}" class="nav-item nav-link {{ request()->route()->getName() == 'transaksi' ? 'active' : '' }}"><i class="fa fa-shopping-cart me-2"></i>Transaksi @php($menungguKonfirmasi = \App\Models\Transaksi::where('status', 'proses')->count()) @if ($menungguKonfirmasi > 0)<span class="badge bg-danger ms-2">{{ $menungguKonfirmasi }}</span> @endif</a>
+            <a href="{{ route('jadwal') }}" class="nav-item nav-link {{ request()->route()->getName() == 'jadwal' ? 'active' : '' }}"><i class="fa fa-calendar-alt me-2"></i>Jadwal Unit</a>
+            <a href="{{ route('katalog') }}" class="nav-item nav-link {{ request()->route()->getName() == 'katalog' ? 'active' : '' }}"><i class="fa fa-tags me-2"></i>Katalog</a>
             @if (auth()->user()->role === 'kasir')
                 <a href="{{ route('laporan') }}" class="nav-item nav-link {{ request()->route()->getName() == 'laporan' ? 'active' : '' }}"><i class="fa fa-file-invoice-dollar me-2"></i>Laporan Transaksi</a>
                 <a href="{{ route('users') }}" class="nav-item nav-link {{ request()->route()->getName() == 'users' ? 'active' : '' }}"><i class="fa fa-users me-2"></i>User</a>

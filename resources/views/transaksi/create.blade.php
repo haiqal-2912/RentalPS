@@ -48,7 +48,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="tanggal_Pemesanan" class="form-label">Tanggal Pemesanan</label>
-                        <input type="date" class="form-control" wire:model="tanggal_Pemesanan" id="tanggal_Pemesanan"
+                        <input type="date" min="{{ now()->toDateString() }}" class="form-control" wire:model="tanggal_Pemesanan" id="tanggal_Pemesanan"
                             value="{{ old('tanggal_Pemesanan') }}">
                         @error('tanggal_Pemesanan')
                             <div class="form text text-danger"> {{ $message }}</div>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="Durasi_sewa" class="form-label">Lama Sewa</label>
-                        <input type="number" class="form-control" wire:change="hitung" wire:model="Durasi_sewa"
+                        <input type="number" min="1" max="30" class="form-control" wire:change="hitung" wire:model="Durasi_sewa"
                             id="Durasi_sewa" value="{{ old('Durasi_sewa') }}">
                         @error('Durasi_sewa')
                             <div class="form text text-danger"> {{ $message }}</div>
@@ -75,7 +75,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="Total_harga" class="form-label">Total Harga : {{ $Total_harga }}</label>
+                        <label for="Total_harga" class="form-label">Total Harga : @rupiah((int) $Total_harga)</label>
                     </div>
                     <button type="button" wire:click="store" class="btn btn-primary">Tambah</button>
                 </form>
