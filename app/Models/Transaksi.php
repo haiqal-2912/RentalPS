@@ -11,6 +11,14 @@ class Transaksi extends Model
     use HasFactory;
     protected $table = "transaksi";
     protected $guarded = ['id'];
+    protected $casts = [
+        'waktu_mulai' => 'datetime',
+        'waktu_selesai' => 'datetime',
+    ];
+
+    /** Status yang sedang "memegang" slot waktu sebuah unit. */
+    public const STATUS_AKTIF = ['proses', 'dikonfirmasi', 'main'];
+
     public function playstation()
     {
         return $this->belongsTo(Playstation::class);
@@ -20,26 +28,32 @@ class Transaksi extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Transaksi aktif pada unit tertentu yang bentrok dengan rentang tanggal [mulai, mulai + durasi hari).
-     * Unit yang berstatus "pinjam" tetapi sudah lewat tanggal kembali tetap dianggap terisi sampai
-     * dikembalikan (sama seperti yang ditampilkan di Live Slot Board).
-     */
-    public function scopeBentrok($query, $playstationId, $mulai, $durasi, $kecualiId = null)
+    public function scopeAktif($query)
     {
-        $mulai = Carbon::parse($mulai)->toDateString();
-        $selesai = Carbon::parse($mulai)->addDays(max(1, (int) $durasi))->toDateString();
-        $besok = Carbon::today()->addDay()->toDateString();
+        return $query->whereIn('status', self::STATUS_AKTIF);
+    }
 
-        $akhirEfektif = "CASE WHEN status = 'pinjam'
-            THEN GREATEST(DATE_ADD(tanggal_Pemesanan, INTERVAL Durasi_sewa DAY), ?)
-            ELSE DATE_ADD(tanggal_Pemesanan, INTERVAL Durasi_sewa DAY) END";
+    /**
+     * Transaksi aktif (semua unit) yang waktunya beririsan dengan [mulai, selesai).
+     * Pelanggan yang berstatus "main" tetapi melewati jam selesai tetap dianggap memakai unit
+     * sampai kasir menandainya selesai (sama seperti di Live Slot Board).
+     */
+    public function scopeTumpang($query, Carbon $mulai, Carbon $selesai, $kecualiId = null)
+    {
+        $akhirEfektif = "CASE WHEN status = 'main'
+            THEN GREATEST(waktu_selesai, CAST(? AS DATETIME))
+            ELSE waktu_selesai END";
 
-        return $query->where('playstation_id', $playstationId)
-            ->where('status', '!=', 'kembali')
-            ->where('tanggal_Pemesanan', '<', $selesai)
-            ->whereRaw("($akhirEfektif) > ?", [$besok, $mulai])
+        return $query->aktif()
+            ->where('waktu_mulai', '<', $selesai->toDateTimeString())
+            ->whereRaw("($akhirEfektif) > ?", [now()->toDateTimeString(), $mulai->toDateTimeString()])
             ->when($kecualiId, fn($q) => $q->where('id', '!=', $kecualiId));
+    }
+
+    /** Sama seperti tumpang(), tetapi untuk satu unit. */
+    public function scopeBentrok($query, $playstationId, Carbon $mulai, Carbon $selesai, $kecualiId = null)
+    {
+        return $query->where('playstation_id', $playstationId)->tumpang($mulai, $selesai, $kecualiId);
     }
 
     public function nomor(): string
@@ -47,15 +61,13 @@ class Transaksi extends Model
         return 'PS-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
     }
 
-    public function tanggalMulai(): Carbon
+    /** Contoh: "14:00 - 16:00" */
+    public function rentangJam(): string
     {
-        return Carbon::parse($this->tanggal_Pemesanan);
-    }
-
-    /** Hari terakhir sewa (inklusif). */
-    public function tanggalAkhir(): Carbon
-    {
-        return $this->tanggalMulai()->copy()->addDays(max(1, (int) $this->Durasi_sewa) - 1);
+        if (!$this->waktu_mulai || !$this->waktu_selesai) {
+            return '-';
+        }
+        return $this->waktu_mulai->format('H:i') . ' - ' . $this->waktu_selesai->format('H:i');
     }
 
     /** Pesan booking terformat untuk dikirim pelanggan ke WhatsApp kasir (F-02 / ID-A1). */
@@ -63,16 +75,15 @@ class Transaksi extends Model
     {
         $unit = $this->playstation ? $this->playstation->Type . ' (SN: ' . $this->playstation->no_seri . ')' : '-';
         return implode("\n", [
-            '*BOOKING BARU - ' . strtoupper(config('psone.nama_usaha')) . '*',
+            '*BOOKING MAIN - ' . strtoupper(config('psone.nama_usaha')) . '*',
             'No. Booking : ' . $this->nomor(),
             'Nama        : ' . $this->nama,
             'No. Telp    : ' . $this->no_telp,
             'Unit        : ' . $unit,
-            'Mulai       : ' . $this->tanggalMulai()->format('d/m/Y'),
-            'Sampai      : ' . $this->tanggalAkhir()->format('d/m/Y') . ' (' . $this->Durasi_sewa . ' hari)',
+            'Tanggal     : ' . optional($this->waktu_mulai)->format('d/m/Y'),
+            'Jam         : ' . $this->rentangJam() . ' (' . $this->durasi_jam . ' jam)',
             'Total       : Rp ' . number_format((int) $this->Total_harga, 0, ',', '.'),
             'Pembayaran  : ' . $this->Metode_pembayaran,
-            'Jaminan     : ' . strtoupper($this->jaminan),
             '',
             'Mohon dikonfirmasi ya, terima kasih.',
         ]);
@@ -98,7 +109,8 @@ class Transaksi extends Model
             $nomor = '62' . $nomor;
         }
         $pesan = 'Halo ' . $this->nama . ', booking ' . $this->nomor() . ' di ' . config('psone.nama_usaha')
-            . ' untuk tanggal ' . $this->tanggalMulai()->format('d/m/Y') . ' (' . $this->Durasi_sewa . ' hari) sudah DIKONFIRMASI. Terima kasih!';
+            . ' pada ' . optional($this->waktu_mulai)->format('d/m/Y') . ' jam ' . $this->rentangJam()
+            . ' sudah DIKONFIRMASI. Kami tunggu kedatangannya!';
         return 'https://wa.me/' . $nomor . '?text=' . rawurlencode($pesan);
     }
 }

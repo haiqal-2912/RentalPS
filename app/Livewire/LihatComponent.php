@@ -27,7 +27,7 @@ class LihatComponent extends Component
         return view('livewire.lihat-component',$data);
     }
 
-    /** F-02 / ID-A2: konfirmasi 1-klik, slot terkunci untuk pelanggan tersebut. */
+    /** Konfirmasi 1-klik: slot terkunci untuk pelanggan tersebut. */
     public function konfirmasi($id)
     {
         $this->hanyaKasir();
@@ -38,31 +38,46 @@ class LihatComponent extends Component
         $transaksi->update(['status' => 'dikonfirmasi']);
         session()->flash('success','Booking '.$transaksi->nomor().' dikonfirmasi');
     }
-    /** Unit diserahkan ke pelanggan (dikonfirmasi -> pinjam). */
-    public function proses($id)
+    /** Pelanggan sudah datang dan mulai main (dikonfirmasi -> main). */
+    public function mulaiMain($id)
     {
         $this->hanyaKasir();
         $transaksi = Transaksi::findOrFail($id);
         if ($transaksi->status !== 'dikonfirmasi') {
-            session()->flash('error','Booking harus dikonfirmasi dulu sebelum dipinjam.');
+            session()->flash('error','Booking harus dikonfirmasi dulu sebelum mulai main.');
             return;
         }
-        $transaksi->update([
-            'status' => 'pinjam'
-        ]);
-        session()->flash('success','Berhasil Proses Data');
+        $transaksi->update(['status' => 'main']);
+        session()->flash('success','Sesi main dimulai');
     }
+    /** Sesi main selesai (main -> selesai). Hanya yang selesai dihitung di laporan. */
     public function selesai($id)
     {
         $this->hanyaKasir();
         $transaksi = Transaksi::findOrFail($id);
-        if ($transaksi->status !== 'pinjam') {
+        if ($transaksi->status !== 'main') {
             return;
         }
-        $transaksi->update([
-            'status' => 'kembali'
-        ]);
-        session()->flash('success','Berhasil Proses Data');
+        $transaksi->update(['status' => 'selesai']);
+        session()->flash('success','Sesi main selesai');
+    }
+    /** Kasir: boleh membatalkan booking proses/dikonfirmasi. Pelanggan: hanya booking miliknya yang masih proses. */
+    public function batalkan($id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        if ($this->isKasir()) {
+            $boleh = in_array($transaksi->status, ['proses', 'dikonfirmasi'], true);
+        } elseif ($this->isPelanggan()) {
+            $boleh = (int) $transaksi->user_id === (int) auth()->id() && $transaksi->status === 'proses';
+        } else {
+            abort(403);
+        }
+        if (!$boleh) {
+            session()->flash('error','Booking ini tidak bisa dibatalkan.');
+            return;
+        }
+        $transaksi->update(['status' => 'batal']);
+        session()->flash('success','Booking '.$transaksi->nomor().' dibatalkan, slot dikosongkan');
     }
     public function destroy($id)
     {

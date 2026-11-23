@@ -20,11 +20,11 @@ class LaporanComponent extends Component
     {
         $this->hanyaKasir();
         if ($this->tanggal2 != "") {
-            $data['transaksi'] = Transaksi::where('status', 'kembali')
+            $data['transaksi'] = Transaksi::where('status', 'selesai')
                 ->whereBetween('tanggal_Pemesanan', [$this->tanggal1, $this->tanggal2])
                 ->paginate(5);
         } else {
-            $data['transaksi'] = Transaksi::where('status', 'kembali')->paginate(5);
+            $data['transaksi'] = Transaksi::where('status', 'selesai')->paginate(5);
         }
         return view('livewire.laporan-component', $data);
     }
@@ -36,7 +36,7 @@ class LaporanComponent extends Component
     {
         $this->hanyaKasir();
         if ($this->tanggal2 != "") {
-            $data['transaksi'] = Transaksi::where('status', 'kembali')
+            $data['transaksi'] = Transaksi::where('status', 'selesai')
                 ->whereBetween('tanggal_Pemesanan', [$this->tanggal1, $this->tanggal2])
                 ->get();
             $pdf = Pdf::loadView('laporan.exportpdf', $data)->output();
@@ -45,7 +45,7 @@ class LaporanComponent extends Component
                 "laporan transaksi " . $this->tanggal1 . ' hingga ' . $this->tanggal2 . ".pdf"
             );
         } else {
-            $data['transaksi'] = Transaksi::where('status', 'kembali')->get();
+            $data['transaksi'] = Transaksi::where('status', 'selesai')->get();
             $pdf = Pdf::loadView('laporan.exportpdf', $data)->output();
             return response()->streamDownload(
                 fn() => print($pdf),

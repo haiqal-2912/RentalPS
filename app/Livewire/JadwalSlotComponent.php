@@ -8,28 +8,27 @@ use Carbon\Carbon;
 use Livewire\Component;
 
 /**
- * Live Slot Board: matriks unit PS x tanggal.
- * Hijau = kosong, Kuning = dibooking (proses/dikonfirmasi), Merah = sedang dipakai (pinjam).
+ * Live Slot Board: matriks unit PS x jam untuk satu tanggal.
+ * Hijau = kosong, Kuning = dibooking (proses/dikonfirmasi), Merah = sedang main, Abu-abu = jam sudah lewat.
  * Bisa dibuka tanpa login; tidak menampilkan data pribadi pemesan.
  */
 class JadwalSlotComponent extends Component
 {
-    public $mulai;
-    protected int $jumlahHari = 7; // protected: tidak bisa diubah dari browser
+    public $tanggal;
 
     public function mount()
     {
-        $this->mulai = today()->toDateString();
+        $this->tanggal = today()->toDateString();
     }
 
-    protected function awal(): Carbon
+    protected function hari(): Carbon
     {
         try {
-            $d = Carbon::createFromFormat('Y-m-d', (string) $this->mulai)->startOfDay();
+            $d = Carbon::createFromFormat('Y-m-d', (string) $this->tanggal)->startOfDay();
         } catch (\Throwable $e) {
             return today();
         }
-        if ($d->lt(today()) || $d->gt(today()->addYear())) {
+        if ($d->lt(today()) || $d->gt(today()->addDays(60))) {
             return today();
         }
         return $d;
@@ -37,57 +36,53 @@ class JadwalSlotComponent extends Component
 
     public function berikutnya()
     {
-        $this->mulai = $this->awal()->addDays($this->jumlahHari)->toDateString();
+        $this->tanggal = $this->hari()->addDay()->toDateString();
     }
 
     public function sebelumnya()
     {
-        $this->mulai = $this->awal()->subDays($this->jumlahHari)->toDateString();
+        $this->tanggal = $this->hari()->subDay()->toDateString();
     }
 
     public function hariIni()
     {
-        $this->mulai = today()->toDateString();
+        $this->tanggal = today()->toDateString();
     }
 
     public function render()
     {
-        $awal = $this->awal();
-        $akhirJendela = $awal->copy()->addDays($this->jumlahHari); // eksklusif
-        $besok = today()->addDay();
+        $hari = $this->hari();
+        $buka = (int) config('psone.jam_buka', 10);
+        $tutup = (int) config('psone.jam_tutup', 22);
+        $sekarang = now();
+        $jam = range($buka, $tutup - 1);
 
-        $hari = [];
-        for ($i = 0; $i < $this->jumlahHari; $i++) {
-            $hari[] = $awal->copy()->addDays($i);
-        }
+        $aktif = Transaksi::tumpang($hari->copy(), $hari->copy()->addDay())
+            ->get(['playstation_id', 'waktu_mulai', 'waktu_selesai', 'status']);
 
-        $grid = []; // [playstation_id][Y-m-d] = 'booking' | 'dipakai'
-        $aktif = Transaksi::where('status', '!=', 'kembali')
-            ->get(['playstation_id', 'tanggal_Pemesanan', 'Durasi_sewa', 'status']);
-
+        $grid = []; // [playstation_id][jam] = 'booking' | 'main'
         foreach ($aktif as $t) {
-            $mulaiT = Carbon::parse($t->tanggal_Pemesanan)->startOfDay();
-            $selesaiT = $mulaiT->copy()->addDays(max(1, (int) $t->Durasi_sewa));
-            $dipakai = $t->status === 'pinjam';
-            if ($dipakai && $selesaiT->lt($besok)) {
-                $selesaiT = $besok->copy(); // terlambat kembali: tetap merah sampai dikembalikan
+            $selesaiT = $t->waktu_selesai;
+            if ($t->status === 'main' && $selesaiT->lt($sekarang)) {
+                $selesaiT = $sekarang; // melebihi jam selesai: tetap merah sampai kasir menandai selesai
             }
-            $tipe = $dipakai ? 'dipakai' : 'booking';
-
-            $d = $mulaiT->lt($awal) ? $awal->copy() : $mulaiT->copy();
-            while ($d->lt($selesaiT) && $d->lt($akhirJendela)) {
-                $kunci = $d->toDateString();
-                if (($grid[$t->playstation_id][$kunci] ?? null) !== 'dipakai') {
-                    $grid[$t->playstation_id][$kunci] = $tipe;
+            foreach ($jam as $j) {
+                $awalSel = $hari->copy()->setTime($j, 0);
+                $akhirSel = $awalSel->copy()->addHour();
+                if ($t->waktu_mulai->lt($akhirSel) && $selesaiT->gt($awalSel)) {
+                    if (($grid[$t->playstation_id][$j] ?? null) !== 'main') {
+                        $grid[$t->playstation_id][$j] = $t->status === 'main' ? 'main' : 'booking';
+                    }
                 }
-                $d->addDay();
             }
         }
 
         $data['unit'] = Playstation::orderBy('Type')->orderBy('no_seri')->get(['id', 'Type', 'no_seri', 'harga_sewa']);
+        $data['jam'] = $jam;
         $data['hari'] = $hari;
         $data['grid'] = $grid;
-        $data['adalahHariIni'] = $awal->isSameDay(today());
+        $data['sekarang'] = $sekarang;
+        $data['adalahHariIni'] = $hari->isSameDay(today());
 
         return view('livewire.jadwal-slot-component', $data);
     }

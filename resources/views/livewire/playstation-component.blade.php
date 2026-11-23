@@ -2,7 +2,7 @@
     <div class="row g-4">
         <div class="col-sm-12 col-xl-12">
             <div class="bg-light rounded h-100 p-4">
-                <h6 class="mb-4">{{ auth()->user()->role === 'kasir' ? 'Playstation' : 'Unit Playstation Tersedia' }}</h6>
+                <h6 class="mb-4">{{ auth()->user()->role === 'kasir' ? 'Playstation' : 'Unit Playstation Kosong Saat Ini' }}</h6>
                 @if (session()->has('success'))
                     <div class="alert alert-success" role="alert">
                         {{ session('success') }}
@@ -14,7 +14,7 @@
                             <th scope="col">No</th>
                             <th scope="col">Type</th>
                             <th scope="col">Serial Number</th>
-                            <th scope="col">Harga Sewa</th>
+                            <th scope="col">Harga / Jam</th>
                             <th scope="col">Foto</th>
                             @if (auth()->user()->role === 'kasir')
                                 <th>

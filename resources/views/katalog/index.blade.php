@@ -4,7 +4,8 @@
 @section('content')
     <div class="container-fluid pt-4 px-4">
         <div class="bg-white rounded p-4 mb-4">
-            <h6 class="mb-4">Tarif Sewa Playstation</h6>
+            <h6 class="mb-1">Tarif Main Playstation</h6>
+            <p class="text-muted mb-4">Main di tempat, tarif per jam. Buka setiap hari {{ sprintf('%02d:00', config('psone.jam_buka', 10)) }} - {{ sprintf('%02d:00', config('psone.jam_tutup', 22)) }}.</p>
             <div class="row">
                 @forelse ($playstation as $ps)
                     <div class="col-md-4 col-lg-3 mb-4">
@@ -15,7 +16,7 @@
                             @endif
                             <div class="card-body text-center">
                                 <h5 class="card-title">{{ $ps->Type }}</h5>
-                                <p class="mb-0"><b>@rupiah($ps->harga_sewa)</b> / hari</p>
+                                <p class="mb-0"><b>@rupiah($ps->harga_sewa)</b> / jam</p>
                             </div>
                         </div>
                     </div>

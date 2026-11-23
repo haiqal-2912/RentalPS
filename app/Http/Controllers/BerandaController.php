@@ -13,7 +13,7 @@ class BerandaController extends Controller
     {
         $data['playstation']=Playstation::count();
         $data['user'] =User::count();
-        $data['transaksi']=Transaksi::where('status', 'kembali')->sum('Total_harga');
+        $data['transaksi']=Transaksi::where('status', 'selesai')->sum('Total_harga');
         return view('beranda', $data);
     }
 }

@@ -25,10 +25,10 @@
             <th scope="col">Type</th>
             <th scope="col">Serial Number</th>
             <th scope="col">Nama Pemesan</th>
-            <th scope="col">Alamat</th>
             <th scope="col">No Telp</th>
-            <th scope="col">Tanggal Pesan</th>
-            <th scope="col">Lama Sewa</th>
+            <th scope="col">Tanggal Main</th>
+            <th scope="col">Jam</th>
+            <th scope="col">Durasi (Jam)</th>
             <th scope="col">Total Harga</th>
         </tr>
     </thead>
@@ -36,18 +36,18 @@
         @forelse ($transaksi as $data)
             <tr>
                 <th scope="row">{{ $loop->iteration }}</th>
-                <td>{{ $data->playstation->Type }}</td>
-                <td>{{ $data->playstation->no_seri }}</td>
+                <td>{{ $data->playstation->Type ?? '-' }}</td>
+                <td>{{ $data->playstation->no_seri ?? '-' }}</td>
                 <td>{{ $data->nama }}</td>
-                <td>{{ $data->alamat }}</td>
-                <td>{{ $data->no_telp }}</td>
+                                <td>{{ $data->no_telp }}</td>
                 <td>{{ $data->tanggal_Pemesanan }}</td>
-                <td>{{ $data->Durasi_sewa }}</td>
-                <td>{{ $data->Total_harga }}</td>
+                <td>{{ $data->rentangJam() }}</td>
+                                <td>{{ $data->durasi_jam }}</td>
+                <td>@rupiah($data->Total_harga)</td>
             </tr>
         @empty
             <tr>
-                <td colspan="5">Data Laporan Belum Ada</td>
+                <td colspan="9">Data Laporan Belum Ada</td>
             </tr>
         @endforelse
     </tbody>

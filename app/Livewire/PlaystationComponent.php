@@ -21,9 +21,10 @@ class PlaystationComponent extends Component
         if ($this->isKasir()) {
             $data['playstation'] = Playstation::paginate(10);
         } else {
-            // Pelanggan hanya melihat unit yang tidak sedang dibooking / dipinjam
-            $dipakai = Transaksi::where('status', '!=', 'kembali')->pluck('playstation_id');
-            $data['playstation'] = Playstation::whereNotIn('id', $dipakai)->paginate(10);
+            // Pelanggan hanya melihat unit yang kosong saat ini (tidak sedang dibooking / dipakai)
+            $sekarang = now();
+            $terisi = Transaksi::tumpang($sekarang, $sekarang->copy()->addMinute())->pluck('playstation_id');
+            $data['playstation'] = Playstation::whereNotIn('id', $terisi)->paginate(10);
         }
         return view('livewire.playstation-component', $data);
     }
@@ -40,11 +41,13 @@ class PlaystationComponent extends Component
             'Type' => 'required',
             'no_seri' => 'required',
             'foto' => 'required|image',
-            'harga_sewa' => 'required',
+            'harga_sewa' => 'required|integer|min:0',
         ], [
             'Type.required' => 'Type Tidak Boleh Kosong!',
             'no_seri.required' => 'Serial Number Tidak Boleh Kosong!',
-            'harga_sewa.required' => 'Harga Sewa Tidak Boleh Kosong!',
+            'harga_sewa.required' => 'Harga per Jam Tidak Boleh Kosong!',
+            'harga_sewa.integer' => 'Harga per Jam harus berupa angka!',
+            'harga_sewa.min' => 'Harga per Jam tidak boleh negatif!',
             'foto.required' => 'Foto Tidak Boleh Kosong!',
             'foto.image' => 'Foto harus sesuai format'
         ]);

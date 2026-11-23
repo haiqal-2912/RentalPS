@@ -24,31 +24,30 @@
 <body>
     <div class="nota">
         <h2>{{ strtoupper(config('psone.nama_usaha')) }}</h2>
-        <div class="sub">Nota Sewa Playstation</div>
+        <div class="sub">Nota Main Playstation</div>
 
         <table>
             <tr><td>No. Nota</td><td class="kanan">{{ $t->nomor() }}</td></tr>
             <tr><td>Dibuat</td><td class="kanan">{{ $t->created_at->format('d/m/Y H:i') }}</td></tr>
             <tr><td>Pemesan</td><td class="kanan">{{ $t->nama }}</td></tr>
             <tr><td>No. Telepon</td><td class="kanan">{{ $t->no_telp }}</td></tr>
-            <tr><td>Jaminan</td><td class="kanan">{{ strtoupper($t->jaminan) }}</td></tr>
             <tr><td>Status</td><td class="kanan">{{ ucfirst($t->status) }}</td></tr>
         </table>
 
         @php
-            $durasi = max(1, (int) $t->Durasi_sewa);
-            $tarif = (int) round($t->Total_harga / $durasi); // tarif saat transaksi dibuat
+            $durasi = max(1, (int) $t->durasi_jam);
+            $tarif = (int) round($t->Total_harga / $durasi); // tarif per jam saat booking dibuat
         @endphp
         <table class="garis" style="margin-top: 12px;">
             <tr>
-                <th style="text-align:left">Rincian Sewa</th>
+                <th style="text-align:left">Rincian Main</th>
                 <th class="kanan">Subtotal</th>
             </tr>
             <tr>
                 <td>
                     {{ $t->playstation->Type ?? 'Unit' }} (SN: {{ $t->playstation->no_seri ?? '-' }})<br>
-                    <small>{{ $t->tanggalMulai()->format('d/m/Y') }} s/d {{ $t->tanggalAkhir()->format('d/m/Y') }}
-                        &middot; {{ $durasi }} hari &times; @rupiah($tarif)</small>
+                    <small>{{ optional($t->waktu_mulai)->format('d/m/Y') }}, {{ $t->rentangJam() }}
+                        &middot; {{ $durasi }} jam &times; @rupiah($tarif)</small>
                 </td>
                 <td class="kanan">@rupiah($t->Total_harga)</td>
             </tr>
@@ -59,7 +58,7 @@
             <tr><td>Metode Pembayaran</td><td class="kanan">{{ $t->Metode_pembayaran }}</td></tr>
         </table>
 
-        <p class="sub" style="margin-top: 20px;">Terima kasih telah menyewa di {{ config('psone.nama_usaha') }}.</p>
+        <p class="sub" style="margin-top: 20px;">Terima kasih telah bermain di {{ config('psone.nama_usaha') }}.</p>
 
         <div class="aksi">
             <button onclick="window.print()">Cetak / Simpan PDF</button>

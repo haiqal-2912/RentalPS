@@ -10,7 +10,7 @@ class NotaController extends Controller
     public function show(Transaksi $transaksi)
     {
         $user = auth()->user();
-        abort_unless($user->role === 'kasir' || $transaksi->user_id === $user->id, 403);
+        abort_unless($user->role === 'kasir' || (int) $transaksi->user_id === (int) $user->id, 403);
 
         $transaksi->load('playstation');
         return view('transaksi.nota', ['t' => $transaksi]);

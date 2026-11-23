@@ -37,12 +37,12 @@
                 </div>
                 <div class="row">
                     @foreach ($playstation as $data)
-                        @php $terisi = in_array($data->id, $terisiHariIni); @endphp
+                        @php $terisi = in_array($data->id, $terisiSekarang); @endphp
                         <div class="col-md-4 d-flex align-items-stretch mb-4" wire:key="ps-{{ $data->id }}">
                             <div class="card w-100" style="position: relative;">
                                 @if ($terisi)
                                     <span class="badge bg-danger"
-                                        style="position: absolute; top: 10px; right: 10px; z-index: 1;">Terisi hari ini</span>
+                                        style="position: absolute; top: 10px; right: 10px; z-index: 1;">Sedang dipakai</span>
                                 @endif
                                 <!-- Gambar dengan tinggi tetap -->
                                 <img src="{{ asset('storage/playstation/' . $data->foto) }}" class="card-img-top"
@@ -51,11 +51,11 @@
                                     <h5 class="card-title text-center">{{ $data->Type }}</h5>
                                     <ul class="list-group list-group-flush flex-grow-1">
                                         <li class="list-group-item">Serial Number: {{ $data->no_seri }}</li>
-                                        <li class="list-group-item">Harga Sewa/Hari: @rupiah($data->harga_sewa)</li>
+                                        <li class="list-group-item">Harga/Jam: @rupiah($data->harga_sewa)</li>
                                     </ul>
                                     <div class="mt-auto text-center">
-                                        <button wire:click="create({{ $data->id }},{{ $data->harga_sewa }})"
-                                            class="btn btn-outline-success w-100">Pesan Playstation</button>
+                                        <button wire:click="create({{ $data->id }})"
+                                            class="btn btn-outline-success w-100">Booking Unit Ini</button>
                                     </div>
                                 </div>
                             </div>

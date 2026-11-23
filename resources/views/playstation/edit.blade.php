@@ -34,7 +34,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="harga_sewa" class="form-label">Harga Sewa</label>
+                        <label for="harga_sewa" class="form-label">Harga Sewa per Jam</label>
                         <input type="text" class="form-control" wire:model="harga_sewa" id="harga_sewa"
                             value="{{ old('harga_sewa') }}">
                         @error('harga_sewa')
